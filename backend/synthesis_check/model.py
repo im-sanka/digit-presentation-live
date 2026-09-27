@@ -8,6 +8,7 @@ which nine.
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import pandas as pd
@@ -17,7 +18,9 @@ from sklearn.model_selection import LeaveOneOut, cross_val_score
 from .features import COLUMNS, featurise, features
 
 #: the training file, resolved from the package so scripts work from any cwd
-DATA = Path(__file__).resolve().parent.parent / "data" / "orders.csv"
+# ponytail: the file lives at the repo root so the notebook on branch 1 and the
+# scripts keep working; point ORDERS_CSV at it when the layout differs
+DATA = Path(os.environ.get("ORDERS_CSV", Path(__file__).resolve().parents[2] / "data" / "orders.csv"))
 
 #: fewer bases than this and the windows are meaningless
 MIN_LENGTH = 40

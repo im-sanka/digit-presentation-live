@@ -1,13 +1,28 @@
-# docker compose up          the app on :8501 and the API on :8000
-# docker compose up app      just the app
+# docker compose up            backend API on :8000, MCP on :8080, frontend on :8501
+# docker compose up api mcp    just the backend, for other AI tools and pipelines
 services:
-  app:
-    build: .
-    ports:
-      - "8501:8501"
-
   api:
     build: .
     command: ["uvicorn", "synthesis_check.api:app", "--host", "0.0.0.0", "--port", "8000"]
     ports:
       - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 3s
+
+  mcp:
+    build: .
+    command: ["python", "-m", "synthesis_check.mcp_server", "--http"]
+    ports:
+      - "8080:8080"
+
+  app:
+    build: .
+    environment:
+      BACKEND_URL: http://api:8000
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "8501:8501"

@@ -15,10 +15,21 @@ failure modes.
 
 ```bash
 pip install -r requirements.txt
-streamlit run app.py
+streamlit run frontend/app.py
 ```
 
 Then paste a sequence, or press one of the three example buttons.
+
+The model is a backend on its own, and the Streamlit screen is only one of the
+things that can ask it:
+
+```bash
+uvicorn synthesis_check.api:app                            # HTTP, :8000
+python -m synthesis_check.mcp_server                       # MCP over stdio
+claude mcp add synthesis-check -- python -m synthesis_check.mcp_server
+```
+
+See [docs/MCP.md](docs/MCP.md) for wiring it into Claude or any other assistant.
 
 ## Check it
 
@@ -43,16 +54,15 @@ what it is actually using
 ## Layout
 
 ```
-synthesis_check/          the package
+backend/synthesis_check/  the model, installed as a package
   features/               twelve numbers from a sequence
-    sequence.py           composition: GC, Tm, windows
-    structure.py          repeats, hairpins, runs
-  model.py                fit, score, explain
-  api.py                  optional HTTP front
-app.py                    the Streamlit app
+  model.py                fit, score, check
+  api.py                  HTTP front
+  mcp_server.py           MCP front, for AI assistants
+frontend/app.py           the Streamlit screen, asks the backend
 scripts/                  make_data, fit, preload
-tests/                    pytest
-docs/                     ARCHITECTURE.md, DEVELOPING.md
+tests/                    features, model, API, MCP, app
+docs/                     ARCHITECTURE.md, DEVELOPING.md, MCP.md
 data/orders.csv           44 orders, 20 failed
 notebook.ipynb            the analysis as it used to be handed over
 ```
@@ -60,23 +70,16 @@ notebook.ipynb            the analysis as it used to be handed over
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the pieces fit and
 [docs/DEVELOPING.md](docs/DEVELOPING.md) for how to change them.
 
-## The optional branch
-
-Only if something other than a person is asking:
-
-```bash
-pip install fastapi uvicorn
-uvicorn synthesis_check.api:app --reload
-curl -X POST localhost:8000/check -H 'content-type: application/json' \
-     -d '{"sequence": "GGCGCCGGCGCCGGCGCCGGCGCCGGCGCCGGCGCCGGCGCCGGCGCC"}'
-```
 
 ## Ship it
 
 ```bash
-docker compose up            # app on :8501, API on :8000
-docker compose up app        # just the app
+docker compose up            # backend API :8000, MCP :8080, frontend :8501
+docker compose up api mcp    # just the backend, for pipelines and assistants
 ```
+
+In compose the frontend talks to the backend over HTTP. On a laptop or on
+Streamlit Community Cloud it imports the backend and runs it in-process.
 
 `.gitlab-ci.yml` runs the tests on every push and builds the image on `main`.
 The theme is in `.streamlit/config.toml`, the favicon in `static/`. The

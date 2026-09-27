@@ -1,34 +1,58 @@
 """Synthesis check: the thing a scientist opens.
 
-    streamlit run app.py
+    streamlit run frontend/app.py
 
 Deliberately one screen: paste a sequence, get a verdict, get the reason in
 the same units the scientist already argues in. The interface is not the
 project; it exists so somebody who is not me can disagree with the model.
+
+The frontend owns no model. With BACKEND_URL set it asks the API; without it
+(Streamlit Community Cloud, a laptop) it imports the backend and runs it in
+the same process. Either way the verdict comes from one check() function.
 """
 
 from __future__ import annotations
 
+import os
+from pathlib import Path
+
 import pandas as pd
+import requests
 import streamlit as st
 
 from synthesis_check.features import clean
-from synthesis_check.model import MIN_LENGTH, check, fit, load_orders
+from synthesis_check.model import MIN_LENGTH, load_orders
 
-st.set_page_config(page_title="Synthesis check", page_icon="static/favicon.png", layout="centered")
+BACKEND_URL = os.environ.get("BACKEND_URL", "").rstrip("/")
+
+st.set_page_config(
+    page_title="Synthesis check",
+    page_icon=str(Path(__file__).parent / "static" / "favicon.png"),
+    layout="centered",
+)
 
 
 @st.cache_resource
-def load():
-    """Fit once per process. It takes a moment, and the room should not watch it twice."""
-    orders = load_orders()
-    return fit(orders), orders
+def backend():
+    """One callable that turns a sequence into a verdict, however it is wired."""
+    if BACKEND_URL:
+        def over_http(sequence: str) -> dict:
+            r = requests.post(f"{BACKEND_URL}/check", json={"sequence": sequence}, timeout=10)
+            r.raise_for_status()
+            return r.json()
+        return over_http
+
+    # ponytail: in-process fallback so the Cloud deploy needs no second service
+    from synthesis_check.model import check, fit
+    model = fit(load_orders())
+    return lambda sequence: check(model, sequence)
 
 
-model, orders = load()
+verdict_for = backend()
+orders = load_orders()
 
 st.markdown("#### Synthesis check")
-st.caption("internal · nothing here leaves the building")
+st.caption("internal · nothing here leaves the building" + (f"  ·  backend {BACKEND_URL}" if BACKEND_URL else ""))
 
 examples = {
     "a real gene fragment": orders.loc[orders.synthesised == "yes", "sequence"].iloc[0],
@@ -49,7 +73,7 @@ if len(sequence) < MIN_LENGTH:
     st.info(f"Paste at least {MIN_LENGTH} bases of A, C, G and T.")
     st.stop()
 
-verdict = check(model, sequence)
+verdict = verdict_for(sequence)
 row = verdict["features"]
 
 if verdict["likely_to_fail"]:

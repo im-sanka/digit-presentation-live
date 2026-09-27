@@ -1,9 +1,9 @@
-"""The optional branch: the same model, without a browser in front of it.
+"""The HTTP API: the same model, without a browser in front of it.
 
-Only worth existing when something other than a person is asking, such as a
-pipeline or a LIMS.
+The Streamlit frontend calls this when BACKEND_URL is set, and so can a
+pipeline, a LIMS, or anything else that speaks JSON.
 
-    pip install fastapi uvicorn
+    pip install -e .[api]
     uvicorn synthesis_check.api:app --reload
 
     curl -X POST localhost:8000/check -H 'content-type: application/json' \\

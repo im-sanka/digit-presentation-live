@@ -20,3 +20,9 @@ description: How this team ships a small Python app. Use when adding CI, contain
 - Theme lives in `.streamlit/config.toml`. Primary colour is the "fine" green `#5d8f7e`; the "failed" red is `#c2506a`. Same two colours as the plots.
 - Favicon is `static/favicon.png`, passed as `page_icon`. Keep it 64px, one idea.
 - `headless = true` and `gatherUsageStats = false` in the server section.
+
+## Backend and frontend
+- The model lives in `backend/<package>/`, installed with `pip install -e .` from a `pyproject.toml` at the root, so every front imports it the same way.
+- Fronts are thin files that call one function: `api.py` for HTTP, `mcp_server.py` for AI assistants, `frontend/app.py` for people. A new front never owns a model.
+- MCP servers use the official `mcp` SDK (`MCPServer`), stdio by default, `--http` for streamable HTTP on :8080. One tool, named for the question it answers.
+- The frontend reads `BACKEND_URL`; set it in compose, leave it unset where a second service is not available.
