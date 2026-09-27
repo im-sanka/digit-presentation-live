@@ -1,0 +1,14 @@
+pandas>=1.4
+scikit-learn>=1.2
+streamlit>=1.30
+
+# tests
+pytest>=7
+
+# only for synthesis_check/api.py, the optional branch
+# fastapi>=0.110
+# uvicorn>=0.29
+
+# only for notebook.ipynb, the "how it used to be" prop
+# jupyterlab>=4.0
+# matplotlib>=3.7
