@@ -15,7 +15,7 @@ import streamlit as st
 from synthesis_check.features import clean
 from synthesis_check.model import MIN_LENGTH, check, fit, load_orders
 
-st.set_page_config(page_title="Synthesis check", page_icon="·", layout="centered")
+st.set_page_config(page_title="Synthesis check", page_icon="static/favicon.png", layout="centered")
 
 
 @st.cache_resource

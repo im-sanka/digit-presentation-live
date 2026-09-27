@@ -70,3 +70,16 @@ uvicorn synthesis_check.api:app --reload
 curl -X POST localhost:8000/check -H 'content-type: application/json' \
      -d '{"sequence": "GGCGCCGGCGCCGGCGCCGGCGCCGGCGCCGGCGCCGGCGCCGGCGCC"}'
 ```
+
+## Ship it
+
+```bash
+docker compose up            # app on :8501, API on :8000
+docker compose up app        # just the app
+```
+
+`.gitlab-ci.yml` runs the tests on every push and builds the image on `main`.
+The theme is in `.streamlit/config.toml`, the favicon in `static/`. The
+conventions behind all three are written down in
+`.claude/skills/ops-conventions/SKILL.md`, so the next project gets them for
+free.

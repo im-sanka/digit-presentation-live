@@ -5,9 +5,9 @@ streamlit>=1.30
 # tests
 pytest>=7
 
-# only for synthesis_check/api.py, the optional branch
-# fastapi>=0.110
-# uvicorn>=0.29
+# for synthesis_check/api.py, the optional branch, and the api service in compose
+fastapi>=0.110
+uvicorn>=0.29
 
 # only for notebook.ipynb, the "how it used to be" prop
 # jupyterlab>=4.0
