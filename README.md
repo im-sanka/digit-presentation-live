@@ -1,5 +1,7 @@
 # Synthesis check
 
+Live: **[digit-presentation-live.streamlit.app](https://digit-presentation-live.streamlit.app/)**
+
 Will a vendor manage to build this DNA construct? Paste a sequence, get a
 verdict, get the reason in units a scientist already argues in.
 
@@ -34,7 +36,7 @@ See [docs/MCP.md](docs/MCP.md) for wiring it into Claude or any other assistant.
 ## Check it
 
 ```bash
-python3 -m pytest -q          # the numbers that must not change
+python3 -m pytest -q          # the numbers that must not change, and the app driven headless
 python3 -m scripts.fit        # prints the accuracy and the top weights
 ```
 
@@ -62,7 +64,7 @@ backend/synthesis_check/  the model, installed as a package
 frontend/app.py           the Streamlit screen, asks the backend
 scripts/                  make_data, fit, preload
 tests/                    features, model, API, MCP, app
-docs/                     ARCHITECTURE.md, DEVELOPING.md, MCP.md
+docs/                     ARCHITECTURE.md, DEVELOPING.md, MCP.md, DEPLOY.md
 data/orders.csv           44 orders, 20 failed
 notebook.ipynb            the analysis as it used to be handed over
 ```
@@ -73,6 +75,11 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the pieces fit and
 
 ## Ship it
 
+Push to `main` and Streamlit Community Cloud redeploys the live app. Steps for
+the first time, and how to check it, are in [docs/DEPLOY.md](docs/DEPLOY.md).
+
+Anywhere else:
+
 ```bash
 docker compose up            # backend API :8000, MCP :8080, frontend :8501
 docker compose up api mcp    # just the backend, for pipelines and assistants
@@ -81,8 +88,9 @@ docker compose up api mcp    # just the backend, for pipelines and assistants
 In compose the frontend talks to the backend over HTTP. On a laptop or on
 Streamlit Community Cloud it imports the backend and runs it in-process.
 
-`.gitlab-ci.yml` runs the tests on every push and builds the image on `main`.
-The theme is in `.streamlit/config.toml`, the favicon in `static/`. The
+`.gitlab-ci.yml` runs the tests on every push, builds the image on `main`, and
+then checks the live app answers.
+The theme is in `.streamlit/config.toml`, the favicon in `frontend/static/`. The
 conventions behind all three are written down in
 `.claude/skills/ops-conventions/SKILL.md`, so the next project gets them for
 free.

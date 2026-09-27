@@ -1,9 +1,10 @@
-# test on every push, build the image on main. Nothing here touches the network
-# except pip and the registry.
-stages: [test, build]
+# test on every push, build the image on main, then check the deployed app is
+# actually up. Streamlit Community Cloud redeploys from main on its own.
+stages: [test, build, smoke]
 
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  LIVE_URL: "https://digit-presentation-live.streamlit.app"
 
 cache:
   paths: [.cache/pip]
@@ -26,3 +27,12 @@ build:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA -t $CI_REGISTRY_IMAGE:latest .
     - docker push $CI_REGISTRY_IMAGE --all-tags
+
+smoke:
+  stage: smoke
+  image: curlimages/curl:latest
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  script:
+    # the cloud redeploy takes a minute or two; give it five before calling it broken
+    - for i in $(seq 1 30); do curl -sf "$LIVE_URL/_stcore/health" && exit 0; sleep 10; done; exit 1
